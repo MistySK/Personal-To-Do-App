@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Task Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-teal-500 to-lime-500 text-gray-900">
+    <header class="text-white p-4 md:p-6">
+        <h1 class="text-2xl md:text-3xl font-bold">Personal Task Manager</h1>
+    </header>
+
+    <div x-data="taskManager()" class="container mx-auto mt-4 p-4">
+
+		<!-- Task Input Form Section-->
+        <section class="bg-white rounded shadow p-4 mb-4">
+            <form @submit.prevent="addTask">
+                <div class="mb-4">
+                    <label class="block text-gray-700">Task Title</label>
+                    <input type="text" x-model="title" class="w-full mt-1 p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700">Task Description (Optional)</label>
+                    <textarea x-model="description" class="w-full mt-1 p-2 border rounded"></textarea>
+                </div>
+                <button type="submit" class="bg-teal-500 text-white px-4 py-2 rounded w-full sm:w-auto">Add Task</button>
+            </form>
+        </section>
+
+        <!-- Task List and Filter Options -->
+		<div class="mt-4 bg-white p-4 rounded shadow">
+            <!-- Filter Options -->
+            <div class="mt-4">
+                <div class="flex mb-4">
+                    <button x-on:click="filter = 'all'" :class="{ 'bg-teal-500 text-white': filter === 'all' }" class="px-4 py-2 rounded">All</button>
+                    <button x-on:click="filter = 'active'" :class="{ 'bg-teal-500 text-white': filter === 'active' }" class="px-4 py-2 rounded">Active</button>
+                    <button x-on:click="filter = 'completed'" :class="{ 'bg-teal-500 text-white': filter === 'completed' }" class="px-4 py-2 rounded">Completed</button>
+                </div>
+            </div>
+			
+			<!-- Task List -->
+			<div class="mb-4">
+                <ul>
+                    <template x-for="task in filteredTasks" :key="task.id">
+                        <li class="flex justify-between items-center mb-2 bg-gray-100 p-4 rounded">
+                            <div class="flex items-center">
+                                <input type="checkbox" x-model="task.completed" @change="saveTasks" class="mr-2">
+                                <div>
+									<span :class="{ 'line-through': task.completed }" class="text-lg font-bold" x-text="task.title"></span>
+									<p x-text="task.description" class="text-gray-700 mt-1" x-show="task.description"></p>
+								</div>
+							</div>	
+                            <div>
+                                <button @click="deleteTask(task.id)" class="text-red-500 hover:text-red-700 px-2 py-1">
+									&#10006;
+                                </button>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+            
+        </div>
+    </div>
+    <script>
+        function taskManager() {
+            return {
+                tasks: JSON.parse(localStorage.getItem('tasks')) || [],
+                filter: 'all',
+                title: '',
+                description: '',
+                addTask() {
+                    this.tasks.push({
+                        id: Date.now(),
+                        title: this.title,
+                        description: this.description,
+                        completed: false,
+                    });
+                    this.saveTasks();
+                    this.title = '';
+                    this.description = '';
+                },
+            
+                deleteTask(id) {
+                    this.tasks = this.tasks.filter((task) => task.id !== id);
+                    this.saveTasks();
+                },
+                saveTasks() {
+                    localStorage.setItem('tasks', JSON.stringify(this.tasks));
+                },
+                get filteredTasks() {
+                    return this.filter === 'all'
+                        ? this.tasks
+                        : this.filter === 'active'
+                        ? this.tasks.filter((task) => !task.completed)
+                        : this.tasks.filter((task) => task.completed);
+                },
+            };
+        }
+    </script>
+</body>
+</html>
